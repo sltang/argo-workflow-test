@@ -50,7 +50,7 @@ spec:
               labels: *labels
             spec:
               containers:
-                - image: myregistry.com/integration-test@sha256:1adc08ac2d86200a8a477277ec7f7a20279fcdee6c7b5adf3522fdb448596821 # change it to your own registry
+                - image: myregistry.com/integration-test@sha256:1a930476c0ba3b42165a600d04fab2a562367884127597ff90174beaa268f02c # change it to your own registry
                   name: integration-test
                   imagePullPolicy: IfNotPresent
                   resources: # limit the resources
@@ -122,7 +122,7 @@ spec:
 
   - name: pull-build
     container:
-      image: myregistry.com/pull-build@sha256:f032691f419288006dcce5991fe8d55bf4cf5f254046ceedfbdddb274ef8990d # change it to your own registry
+      image: myregistry.com/pull-build@sha256:48b64dcf97fafabddc37b1fb0fc7d373c2ceac5c41215c6b3a59f55335277210 # change it to your own registry
       resources:
         limits:
           memory: 512Mi

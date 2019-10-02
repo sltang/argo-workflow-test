@@ -5,12 +5,12 @@ const fs = require('fs');
 
 const createTestCafe = require('/usr/lib/node_modules/testcafe');
 let testcafe = null;
+
 const namespace = process.env.POD_NAMESPACE
-//console.log(namespace)
-//const hostname = `${process.env.KUBERNETES_SERVICE_HOST}:${process.env.KUBERNETES_SERVICE_PORT}/apis/apps/v1/namespaces/${namespace}/deployments/integration-test`
 const workFlow = process.env.WORKFLOW_NAME
 const token = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token', 'utf8')
 const path = `/apis/argoproj.io/v1alpha1/namespaces/${namespace}/workflows/${workFlow}`
+//POST options to delete Argo workflow
 const options = {
   hostname: 'kubernetes.default.svc',
   port: 443,
@@ -21,50 +21,45 @@ const options = {
     Authorization: `Bearer ${token}`
   }
 }
-console.log(options)
 
 http.createServer(function (req, res) {
-  console.log(req.headers)
-  if (req.method === 'POST' && req.headers['ce-type'] === 'test') {//header names are case-sensitive
-    config.pageUrl = "http://" + req.headers['ce-source'] + ":3000/"
-    createTestCafe('localhost', 1337, 1338)
-      .then(tc => {
-        console.log("Running tests...")
-        testcafe = tc;
-        const runner = testcafe.createRunner();
-        return runner
-          .src('/e2e/tests/*.js')
-          .browsers('chromium:headless --no-sandbox')
-          .run();
-      })
-      .then(failedCount => {
-        console.log('Tests failed: ' + failedCount);
-        testcafe.close(); 
-        const _req = https.request(options, _res => {//call api-server to delete workflow
-          console.log(`STATUS: ${_res.statusCode}`);
-          _res.on('data', d => {
-            console.log(d.toString('utf-8'))
+  if (req.method === 'POST') {
+    if (req.headers['ce-type'] === 'test') {//header names are case-sensitive
+      config.pageUrl = "http://" + req.headers['ce-source'] + ":3000/"
+      createTestCafe('localhost', 1337, 1338) //run tests
+        .then(tc => {
+          console.log("Running tests...")
+          testcafe = tc;
+          const runner = testcafe.createRunner();
+          return runner
+            .src('/e2e/tests/*.js')
+            .browsers('chromium:headless --no-sandbox')
+            .run();
+        })
+        .then(failedCount => {
+          console.log('Tests failed: ' + failedCount);
+          fs.writeFileSync("/mnt/data/integration-test-results-" + Date.now(), failedCount) //write test results to persistent volume
+          testcafe.close();
+          const _req = https.request(options, _res => {//call Kubernetes api-server to delete Argo workflow
+            _res.on('data', d => {
+              console.log(d.toString('utf-8'))
+            })
           })
-        })
-        _req.on('error', error => {
-          console.error(error)
-        })
-        //_req.write(JSON.stringify({ apiVersion: "v1", kind: "DeleteOptions", gracePeriodSeconds: 0 }))
-        _req.end()       
+          _req.on('error', error => {
+            console.error(error)
+          })
+          _req.end()
+        });
+      req.on('end', () => {
+        res.end('ok');
       });
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString(); // convert Buffer to string
-    });
-    req.on('end', () => {
-      console.log(body);
-      res.end('ok');
-    });
+    } else {
+      console.error(`Missing ce-type header: ${req.headers}`)
+      res.statusCode = 400;
+      res.end('Missing ce-type header');
+    }
   } else {
-    res.write('Hello World!'); //write a response to the client
-    res.end(); //end the response
+    res.end('Success!'); //end the response
   }
-}).listen(8080, function() {//the server object listens on port 8080
-  //post ready message to broker
-}); 
+}).listen(8080); //the server object listens on port 8080
 
