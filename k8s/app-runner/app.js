@@ -7,7 +7,7 @@ const options = {
     port: 80,
     method: 'POST',
     headers: {
-        'Ce-Id': 'github event',
+        'Ce-Id': 'myapp',
         'Ce-Specversion': '0.2',
         'Ce-Type': 'test',
         'Ce-Source': '',

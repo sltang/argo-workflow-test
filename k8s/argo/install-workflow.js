@@ -11,18 +11,16 @@ const options = {
     }
 }
 
-console.log(options)
+const yaml = fs.readFileSync("../github-event-receiver/test-workflow.yaml")
 
-const yaml = fs.readFileSync("test-workflow-daemon-event.yaml")
-
-const _req = http.request(options, _res => {
-    console.log(`STATUS: ${_res.statusCode}`);
-    _res.on('data', d => {
+const req = http.request(options, res => {
+    console.log(`STATUS: ${res.statusCode}`);
+    res.on('data', d => {
         console.log(d.toString('utf-8'))
     })
 })
-_req.on('error', error => {
+req.on('error', error => {
     console.error(error)
 })
-_req.write(yaml)
-_req.end()
+req.write(yaml)
+req.end()

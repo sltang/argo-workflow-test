@@ -1,8 +1,9 @@
 {
-  "name": "app-runner",
+  "name": "github-event-receiver",
   "version": "0.0.1",
-  "description": "Run app to test",
-  "main": "app.js",
+  "description": "Github webhook",
+  "main": "receiver.js",
+  "repository": "https://github.com",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
