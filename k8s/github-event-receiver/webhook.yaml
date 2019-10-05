@@ -1,0 +1,27 @@
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: webhook
+  namespace: argo-test
+spec:
+  template:
+    spec:
+      containers:
+      - image: myregistry.com/webhook@sha256:d6ada906992b76bf8aee67953ba14c948414167c250db9bd420fc74c7e0eed5c
+        ports:
+        - containerPort: 4567
+        readinessProbe:
+          httpGet:
+            path: /health
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 1
+        env:
+          - name: POD_NAMESPACE
+            value: argo-test
+          - name: WORKFLOW_NAME
+            value: pull-build-test
+            # valueFrom:
+            #   fieldRef:
+            #     fieldPath: metadata.namespace # not allowed

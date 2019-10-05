@@ -1,0 +1,15 @@
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Trigger
+metadata:
+  name: pull-build-trigger
+  namespace: argo-test
+spec:
+  filter:
+    attributes:
+      source: integration-test
+      type: ready
+  subscriber:
+    ref:
+      apiVersion: v1
+      kind: Service
+      name: myapp
