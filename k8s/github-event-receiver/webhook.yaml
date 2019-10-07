@@ -7,7 +7,7 @@ spec:
   template:
     spec:
       containers:
-      - image: myregistry.com/webhook@sha256:d6ada906992b76bf8aee67953ba14c948414167c250db9bd420fc74c7e0eed5c
+      - image: myregistry.com/webhook@sha256:f03788d8e5d5aed5e8fc737726b120955516b70397aa6dd7f9afddba9d99f8ef
         ports:
         - containerPort: 4567
         readinessProbe:
@@ -22,6 +22,8 @@ spec:
             value: argo-test
           - name: WORKFLOW_NAME
             value: pull-build-test
-            # valueFrom:
-            #   fieldRef:
-            #     fieldPath: metadata.namespace # not allowed
+          - name: GITHUB_WEBHOOK_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: github-webhook-secret
+                key: secret

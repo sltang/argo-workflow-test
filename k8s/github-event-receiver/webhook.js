@@ -2,7 +2,9 @@ const express = require('express');
 const https = require('https')
 const bodyParser = require('body-parser')
 const fs = require('fs')
+const crypto = require('crypto');
 
+const secret = process.env.GITHUB_WEBHOOK_SECRET
 const namespace = process.env.POD_NAMESPACE
 const workFlow = process.env.WORKFLOW_NAME
 const token = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token', 'utf8')
@@ -28,9 +30,17 @@ app.use(bodyParser.json({
     type: 'application/json'
 }));
 
-app.post('/', function (req, res) {
-    console.log(req.headers)
-    console.log(req.body)
+app.post('/payload', function (req, res) {
+    //verify github signature
+    let signature = req.headers['x-hub-signature']
+    const hmac = crypto.createHmac('sha1', secret);
+    hmac.update(JSON.stringify(req.body));
+    let computedSignature = 'sha1='+hmac.digest('hex')
+    const verified = crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(computedSignature))
+    if (!verified) {
+        res.status(400).end()
+        return
+    }
     const yaml = fs.readFileSync("./test-workflow.yaml")
     //start Argo workflow
     const _req = https.request(options, _res => {
