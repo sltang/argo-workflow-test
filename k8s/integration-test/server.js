@@ -38,7 +38,8 @@ http.createServer(function (req, res) {
         })
         .then(failedCount => {
           console.log('Tests failed: ' + failedCount);
-          fs.writeFileSync("/mnt/data/integration-test-results-" + Date.now(), failedCount) //write test results to persistent volume
+          //write test results to persistent volume; it may not work with RWO only persistent volumes when running on multiple nodes
+          //fs.writeFileSync("/mnt/data/integration-test-results-" + Date.now(), failedCount)
           testcafe.close();
           const _req = https.request(options, _res => {//call Kubernetes api-server to delete Argo workflow
             _res.on('data', d => {
